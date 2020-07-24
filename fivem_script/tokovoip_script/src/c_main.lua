@@ -85,7 +85,7 @@ local function clientProcessing()
 		local playerServerId = GetPlayerServerId(player);
 		if (GetPlayerPed(player) and voip.serverId ~= playerServerId) then
 			local playerPos = GetPedBoneCoords(GetPlayerPed(player), HeadBone);
-			local dist = #(localPos - playerPos);
+			local dist = GetDistanceBetweenCoords(localPos, playerPos, true);
 			if(dist > 40) then goto continue end
 
 			if (not getPlayerData(playerServerId, "voip:mode")) then
@@ -102,15 +102,23 @@ local function clientProcessing()
 			--
 			local angleToTarget = localHeading - math.atan(playerPos.y - localPos.y, playerPos.x - localPos.x);
 
+			local posY = playerPos.z - localPos.y;
+
+			if (posY > 0) then
+				posY = 1;
+			elseif (posY < 0) then
+				posY = -1
+			end
+
 			-- Set player's default data
 			local tbl = {
 				uuid = getPlayerData(playerServerId, "voip:pluginUUID"),
 				volume = -30,
 				muted = 1,
 				radioEffect = false,
-				posX = voip.plugin_data.enableStereoAudio and math.cos(angleToTarget) * dist or 0,
-				posY = voip.plugin_data.enableStereoAudio and math.sin(angleToTarget) * dist or 0,
-				posZ = voip.plugin_data.enableStereoAudio and playerPos.z or 0
+				posX = voip.plugin_data.enableStereoAudio and math.cos(angleToTarget) or 0,
+				posY = voip.plugin_data.enableStereoAudio and localPos.z + posY or 0,
+				posZ = voip.plugin_data.enableStereoAudio and math.sin(angleToTarget) or 0
 			};
 			--
 
@@ -165,8 +173,8 @@ local function clientProcessing()
 				founduserData.muted = false
 				founduserData.volume = 0;
 				founduserData.posX = 0;
-				founduserData.posY = 0;
-				founduserData.posZ = voip.plugin_data.enableStereoAudio and localPos.z or 0;
+				founduserData.posY = voip.plugin_data.enableStereoAudio and localPos.z or 0;
+				founduserData.posZ = 0;
 			end
 
 			if founduserData.forceUnmuted then
@@ -183,8 +191,8 @@ local function clientProcessing()
 
 	voip.plugin_data.Users = usersdata; -- Update TokoVoip's data
 	voip.plugin_data.posX = 0;
-	voip.plugin_data.posY = 0;
-	voip.plugin_data.posZ = voip.plugin_data.enableStereoAudio and localPos.z or 0;
+	voip.plugin_data.posY = voip.plugin_data.enableStereoAudio and localPos.z or 0;
+	voip.plugin_data.posZ = 0;
 end
 
 RegisterNetEvent("initializeVoip");
